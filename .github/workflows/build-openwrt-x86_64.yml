@@ -82,7 +82,6 @@ jobs:
         df -hT $PWD
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /builder/openwrt ${GITHUB_WORKSPACE}/openwrt
-        ln -sf /builder/openwrt /home/runner/work/_actions/ophub/amlogic-s9xxx-openwrt/main/openwrt
 
     - name: Load custom feeds
       run: |
