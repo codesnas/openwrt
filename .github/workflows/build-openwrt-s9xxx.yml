@@ -168,7 +168,7 @@ jobs:
         openwrt_path: openwrt/bin/targets/*/*/*.tar.gz
         openwrt_board: s905x3_s905d_s922x
         openwrt_kernel: 6.1.1_5.15.1
-        gh_token: ${{ secrets.GH_TOKEN }}
+        gh_token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Upload artifact to Actions
       uses: kittaakos/upload-artifact-as-is@master
