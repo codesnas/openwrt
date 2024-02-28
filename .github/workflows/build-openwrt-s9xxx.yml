@@ -85,6 +85,11 @@ jobs:
         ln -sf /builder/openwrt ${GITHUB_WORKSPACE}/openwrt
         ln -sf /builder/openwrt /home/runner/work/_actions/ophub/amlogic-s9xxx-openwrt/main/openwrt
 
+        # Set output information
+        echo "build_tag=OpenWrt_s9xxx_$(date +"%Y.%m")" >> ${GITHUB_OUTPUT}
+        df -hT ${PWD}
+        echo "status=success" >> ${GITHUB_OUTPUT}
+
     - name: Load custom feeds
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
@@ -126,85 +131,64 @@ jobs:
         echo "FILE_DATE=$(date +"%Y.%m.%d.%H%M")" >> $GITHUB_ENV
         echo "status=success" >> ${GITHUB_OUTPUT}
 
-    - name: Check space usage
-      if: (!cancelled())
-      run: df -hT
-
-    - name: Upload OpenWrt bin directory to Actions
-      uses: actions/upload-artifact@v2
-      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
-      with:
-        name: openwrt_bin_armvirt_64_${{ env.FILE_DATE }}
-        path: openwrt/bin
-        retention-days: ${{ env.RECENT_LASTEST }}
-        if-no-files-found: ignore
-
-    - name: Organize armvirt files
-      id: organize
-      if: steps.compile.outputs.status == 'success' && !cancelled()
+    - name: Clear server space
+      id: clean
+      if: ${{ steps.compile.outputs.status }} == 'success' && !cancelled()
       run: |
-        [ -d "ipk" ] || mkdir -p ipk
-        cp -rf $(find openwrt/bin/packages/ -type f -name "*.ipk") ipk/
-        sudo tar -czf ipk.tar.gz ipk && mv -f ipk.tar.gz openwrt/bin/targets/*/*
-        [ -f "openwrt/.config" ] && cp -f openwrt/.config openwrt/bin/targets/*/*/
-        cd openwrt/bin/targets/*/*
-        rm -rf packages && mv -f .config config && sync
-        echo "TMPFILEPATH=$PWD" >> $GITHUB_ENV
+        # Clean up server space
+        cd openwrt/
+        [[ -d "output" ]] || mkdir output
+        cp -f bin/targets/*/*/*rootfs.tar.gz output/
+        cp -f .config output/config
+        rm -rf $(ls . | grep -v "^output$" | xargs) 2>/dev/null
+
+        # Generate sha256sum file
+        cd output/
+        for file in *; do [[ ! -d "${file}" ]] && sha256sum "${file}" >"${file}.sha"; done
+
+        # Set output information
+        df -hT ${PWD}
         echo "status=success" >> ${GITHUB_OUTPUT}
 
-    - name: Upload armvirt directory to Actions
-      uses: actions/upload-artifact@v2
-      if: steps.organize.outputs.status == 'success' && env.UPLOAD_ARMVIRT == 'true' && !cancelled()
+    - name: Upload OpenWrt to Release
+      uses: ncipollo/release-action@main
+      if: ${{ steps.clean.outputs.status }} == 'success' && !cancelled()
       with:
-        name: openwrt_armvirt_64_${{ env.FILE_DATE }}
-        path: ${{ env.TMPFILEPATH }}
-        retention-days: ${{ env.RECENT_LASTEST }}
-        if-no-files-found: ignore
+        tag: ${{ steps.codes.outputs.build_tag }}
+        artifacts: openwrt/output/*
+        allowUpdates: true
+        removeArtifacts: false
+        replacesArtifacts: true
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Package Armvirt as OpenWrt
-      if: steps.compile.outputs.status == 'success' && !cancelled()
+    - name: Packaging OpenWrt
+      if: ${{ steps.clean.outputs.status }} == 'success' && !cancelled()
       uses: ophub/amlogic-s9xxx-openwrt@main
       with:
-        openwrt_path: openwrt/bin/targets/*/*/*.tar.gz
-        openwrt_board: s905x3_s905d_s922x
-        openwrt_kernel: 6.1.1_5.15.1
-        gh_token: ${{ secrets.GITHUB_TOKEN }}
+        openwrt_path: openwrt/output/*rootfs.tar.gz
+        openwrt_board: s905d_s905x3_s922x_s912
+        openwrt_kernel: 5.15.1_6.1.1
+        auto_kernel: true
 
-    - name: Upload artifact to Actions
-      uses: kittaakos/upload-artifact-as-is@master
-      if: env.PACKAGED_STATUS == 'success' && env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+    - name: Upload the packaged OpenWrt
+      uses: ncipollo/release-action@main
+      if: ${{ env.PACKAGED_STATUS }} == 'success' && !cancelled()
       with:
-        path: ${{ env.PACKAGED_OUTPUTPATH }}/
-
-    - name: Upload OpenWrt Firmware to cowtransfer
-      if: env.PACKAGED_STATUS == 'success' && env.UPLOAD_COWTRANSFER == 'true' && !cancelled()
-      run: |
-        curl -fsSL git.io/file-transfer | sh
-        ./transfer cow --block 2621440 -s -p 64 --no-progress ${{ env.PACKAGED_OUTPUTPATH }}/{openwrt_s9xxx_*,openwrt_n1_*} 2>&1 | tee cowtransfer.log
-        echo "COW_URL=$(cat cowtransfer.log | grep https | cut -f3 -d" ")" >> $GITHUB_ENV
-
-    - name: Upload OpenWrt Firmware to WeTransfer
-      if: env.PACKAGED_STATUS == 'success' && env.UPLOAD_WETRANSFER == 'true' && !cancelled()
-      run: |
-        curl -fsSL git.io/file-transfer | sh
-        ./transfer wet -s -p 16 --no-progress ${{ env.PACKAGED_OUTPUTPATH }}/{openwrt_s9xxx_*,openwrt_n1_*} 2>&1 | tee wetransfer.log
-        echo "WET_URL=$(cat wetransfer.log | grep https | cut -f3 -d" ")" >> $GITHUB_ENV
-
-    - name: Upload OpenWrt Firmware to Release
-      uses: ncipollo/release-action@v1
-      if: env.PACKAGED_STATUS == 'success' && env.UPLOAD_RELEASE == 'true' && !cancelled()
-      with:
-        tag: openwrt_s9xxx_lede_${{ env.PACKAGED_OUTPUTDATE }}
+        tag: ${{ steps.codes.outputs.build_tag }}
         artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
         allowUpdates: true
+        removeArtifacts: false
+        replacesArtifacts: true
         token: ${{ secrets.GITHUB_TOKEN }}
         body: |
-          This is OpenWrt firmware for Amlogic S9xxx STB
-          * Firmware information
-          Default IP: 192.168.1.1
-          Default username: root
-          Default password: password
-          Default WIFI name: OpenWrt
-          Default WIFI password: none
-          Install to EMMC: Login to OpenWrt → System → Amlogic Service → Install OpenWrt
+          ### OpenWrt Image information
+          - Default IP: 192.168.1.1
+          - Default username: root
+          - Default password: password
+          - Default WIFI name: OpenWrt
+          - Default WIFI password: none
+          ### Install to EMMC
+          - Login to OpenWrt → System → Amlogic Service → Install OpenWrt
+          ### OpenWrt Image Verification
+          - sha256sum
 
