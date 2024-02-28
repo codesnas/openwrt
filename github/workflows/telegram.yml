@@ -1,0 +1,37 @@
+#========================================================================================================================
+# https://github.com/ophub/op
+# Description: Automatically Build OpenWrt for Linksys WRT1900ACS
+# Cron: min (0 - 59) / hour (0 - 23) / day of month (1 - 31) / month (1 - 12) / day of week (0 - 6)(Sunday - Saturday)
+# Source code repository: https://github.com/coolsnowwolf/lede / Branch: master
+#========================================================================================================================
+
+name: Test Telegram notification
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+  #schedule:
+  #- cron: '0 17 * * *'
+
+env:
+  TZ: Asia/Shanghai
+  PRODUCT_NAME: OpenWrt
+  DATE: $(date +"%m.%d.%H%M")
+  USEVERSIONINFO: "5.1.1"
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Telegram notification
+        run: |
+          curl "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" -d "chat_id=${{ secrets.TELEGRAM_TO }}&text=
+          编译时间：${{ env.DATE }}
+          OpenWrt 更新信息：${{ env.USEVERSIONINFO }}
+          ${{ env.PRODUCT_NAME }} 编译完成
+          "
