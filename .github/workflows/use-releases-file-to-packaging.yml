@@ -236,7 +236,7 @@ jobs:
           sudo chown -R runner.runner /builder
           df -Th
 
-      - name: Download OpenWrt [ ${{ inputs.source_branch }} ]
+      - name: Download OpenWrt tar file
         id: down
         working-directory: /builder
         if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
