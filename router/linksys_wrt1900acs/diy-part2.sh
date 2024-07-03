@@ -27,7 +27,6 @@ sed -i "s|DISTRIB_REVISION='.*'|DISTRIB_REVISION='R$(date +%Y.%m.%d)'|g" package
 # Add luci-app-ssr-plus
 rm -rf package/openwrt-ssrplus 2>/dev/null
 git clone --single-branch --depth=1 --branch=master https://github.com/fw876/helloworld.git package/openwrt-ssrplus
-rm -rf package/openwrt-ssrplus/luci-app-ssr-plus/po/zh_Hans 2>/dev/null
 
 # Mydiy-luci-app-and-theme（use to /.config luci-app&theme）
 # ==========luci-app-url==========
