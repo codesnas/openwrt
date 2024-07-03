@@ -28,6 +28,9 @@ sed -i "s|DISTRIB_REVISION='.*'|DISTRIB_REVISION='R$(date +%Y.%m.%d)'|g" package
 rm -rf package/openwrt-ssrplus 2>/dev/null
 git clone --single-branch --depth=1 --branch=master https://github.com/fw876/helloworld.git package/openwrt-ssrplus
 
+# Remove luci-app-samba4
+sed -i 's| autosamba||g' target/linux/x86/Makefile
+
 # Mydiy-luci-app-and-theme（use to /.config luci-app&theme）
 # ==========luci-app-url==========
 # git clone https://github.com/kenzok8/openwrt-packages.git package/openwrt-packages
