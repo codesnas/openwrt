@@ -37,7 +37,6 @@ git clone --single-branch --depth=1 --branch=main https://github.com/ophub/luci-
 # Add luci-app-ssr-plus
 rm -rf package/openwrt-ssrplus 2>/dev/null
 git clone --single-branch --depth=1 --branch=master https://github.com/fw876/helloworld.git package/openwrt-ssrplus
-rm -rf package/openwrt-ssrplus/luci-app-ssr-plus/po/zh_Hans 2>/dev/null
 
 # Add p7zip
 # svn co https://github.com/hubutui/p7zip-lede/trunk package/p7zip
