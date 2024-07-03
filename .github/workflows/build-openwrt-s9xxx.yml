@@ -260,7 +260,7 @@ jobs:
         ln -sf /builder/openwrt /home/runner/work/_actions/ophub/amlogic-s9xxx-openwrt/main/openwrt
 
         # Set output information
-        echo "build_tag=OpenWrt_s9xxx_$(date +"%Y.%m")" >> ${GITHUB_OUTPUT}
+        echo "build_tag=OpenWrt_s9xxx_$(date +"%Y.%m.%d.%H%M")" >> ${GITHUB_OUTPUT}
         df -hT ${PWD}
         echo "status=success" >> ${GITHUB_OUTPUT}
 
