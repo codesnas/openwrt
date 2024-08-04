@@ -35,7 +35,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Initialization environment
       env:
@@ -129,7 +129,7 @@ jobs:
       run: df -hT
 
     - name: Upload bin directory
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
         name: Bin_openwrt_x86_64_${{ env.DEVICE_NAME }}_${{ env.FILE_DATE }}
@@ -151,7 +151,7 @@ jobs:
         echo "status=success" >> ${GITHUB_OUTPUT}
 
     - name: Upload firmware directory
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       with:
         name: openwrt_x86_64_${{ env.DEVICE_NAME }}_${{ env.FILE_DATE }}
@@ -174,7 +174,7 @@ jobs:
         echo "WET_URL=$(cat wetransfer.log | grep https | cut -f3 -d" ")" >> $GITHUB_ENV
 
     - name: Upload firmware to release
-      uses: ncipollo/release-action@v1
+      uses: ncipollo/release-action@main
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
         tag: openwrt_x86_64_${{ env.DEVICE_NAME }}_${{ env.FILE_DATE }}
