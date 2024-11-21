@@ -319,11 +319,17 @@ jobs:
       id: clean
       if: ${{ steps.compile.outputs.status }} == 'success' && !cancelled()
       run: |
-        # Clean up server space
+        # Backup OpenWrt rootfs and config files
         cd openwrt/
         [[ -d "output" ]] || mkdir output
         cp -f bin/targets/*/*/*rootfs.tar.gz output/
         cp -f .config output/config
+        # Backup ipk files
+        [[ -d "ipk" ]] || mkdir -p ipk
+        cp -rf $(find bin/packages/ -type f -name "*.ipk") ipk/
+        sudo tar -czf ipk.tar.gz ipk && cp -f ipk.tar.gz output/
+
+        # Clean up server space
         rm -rf $(ls . | grep -v "^output$" | xargs) 2>/dev/null
 
         # Generate sha256sum file
