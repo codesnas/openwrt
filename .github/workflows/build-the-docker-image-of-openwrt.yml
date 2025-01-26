@@ -18,6 +18,10 @@ on:
         type: choice
         options:
           - s9xxx
+      default_ip:
+        description: "Set the default IP address"
+        required: false
+        default: "192.168.1.66"
       docker_img:
         description: "Set the docker image"
         required: false
@@ -63,7 +67,7 @@ jobs:
         if: ${{ steps.down.outputs.status }} == 'success' && !cancelled()
         run: |
           chmod +x ${MAKE_DOCKER_SH}
-          ${MAKE_DOCKER_SH}
+          ${MAKE_DOCKER_SH} -i ${{ inputs.default_ip }}
           echo "status=success" >> ${GITHUB_OUTPUT}
 
       - name: Set up QEMU

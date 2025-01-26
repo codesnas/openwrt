@@ -143,6 +143,32 @@ adjust_settings() {
         echo " Board: docker | Production Date: $(date +%Y-%m-%d)" >>${tmp_path}/etc/banner
         echo "───────────────────────────────────────────────────────────────────────" >>${tmp_path}/etc/banner
     }
+
+    # If it is followed by [ : ], it means that the option requires a parameter value
+    get_all_ver="$(getopt "i:" "${@}")"
+
+    while [[ -n "${1}" ]]; do
+        case "${1}" in
+        -i | --ip)
+            if [[ -n "${2}" ]]; then
+                default_ip="${2}"
+                shift
+            else
+                default_ip="192.168.1.1"
+            fi
+            ;;
+        *)
+            error_msg "Invalid option [ ${1} ]!"
+            ;;
+        esac
+        shift
+    done
+
+    # Adjust the default IP address
+    [[ -f "${tmp_path}/bin/config_generate" ]] && {
+        echo -e "${INFO} Adjust default IP to [ ${default_ip} ]."
+        sed -i "s|192.168.1.1|${default_ip}|g" ${tmp_path}/bin/config_generate
+    }
 }
 
 make_dockerimg() {
@@ -180,7 +206,7 @@ echo -e "${INFO} Make path: [ ${PWD} ]"
 #
 check_depends
 find_openwrt
-adjust_settings
+adjust_settings "${@}"
 make_dockerimg
 #
 # All process completed
