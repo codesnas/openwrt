@@ -31,7 +31,7 @@ on:
       releases_keep_latest:
         description: "How many latest releases to keep."
         required: false
-        default: "2"
+        default: "3"
         type: choice
         options:
           - 30
