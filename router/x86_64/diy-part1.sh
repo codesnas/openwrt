@@ -1,9 +1,9 @@
 #!/bin/bash
 #========================================================================================================================
-# https://github.com/ophub/op
-# Description: Automatically Build OpenWrt for X86_64
-# Function: Diy script (Before Update feeds, Modify the default IP, hostname, theme, add/remove software packages, etc.)
-# Source code repository: https://github.com/coolsnowwolf/lede / Branch: master
+# https://github.com/codesnas/openwrt
+# Description: Automatically Build OpenWrt for x86_64
+# Function: Diy script (After Update feeds, Modify the default IP, hostname, theme, add/remove software packages, etc.)
+# Source code repository: https://github.com/immortalwrt/immortalwrt / Branch: master
 #========================================================================================================================
 
 # Uncomment a feed source
